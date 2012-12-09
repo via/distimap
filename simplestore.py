@@ -12,35 +12,35 @@ class SimpleStore:
     self.root = storeroot
     self.xattrname = 'user.flags.distimap'
 
-  def process(self, command, callback):
+  def process(self, command, callback, data):
     parsed = json.loads(command)
     if (type(parsed) == types.ListType):
       for c in parsed:
-        self._parse_command(c, callback)
+        callback(json.dumps(self._parse_command(c)), data)
     else:
-      self._parse_command(parsed, callback)
+      callback(json.dumps(self._parse_command(parsed)), data)
 
-  def _parse_command(self, cmd, cb):
+  def _parse_command(self, cmd):
     if cmd['command'] == "listmailboxes":
-      return cb(self._process_list_mailboxes(cmd['account']))
+      return self._process_list_mailboxes(cmd['account'])
     if cmd['command'] == "listuids":
-      return cb(self._process_list_uids(cmd['account'], cmd['mailbox']))
+      return self._process_list_uids(cmd['account'], cmd['mailbox'])
     if cmd['command'] == "getflags":
-      return cb(self._process_get_flags(cmd['account'], cmd['mailbox'], cmd['uid']))
+      return self._process_get_flags(cmd['account'], cmd['mailbox'], cmd['uid'])
     if cmd['command'] == "getheaders":
-      return cb(self._process_get_headers(cmd['account'], cmd['mailbox'], cmd['uid']))
+      return self._process_get_headers(cmd['account'], cmd['mailbox'], cmd['uid'])
     if cmd['command'] == "getmessage":
-      return cb(self._process_get_message(cmd['account'], cmd['mailbox'], cmd['uid']))
+      return self._process_get_message(cmd['account'], cmd['mailbox'], cmd['uid'])
     if cmd['command'] == "createmailbox":
-      return cb(self._process_create_mailbox(cmd['account'], cmd['mailbox']))
+      return self._process_create_mailbox(cmd['account'], cmd['mailbox'])
     if cmd['command'] == "deletemailbox":
-      return cb(self._process_delete_mailbox(cmd['account'], cmd['mailbox']))
+      return self._process_delete_mailbox(cmd['account'], cmd['mailbox'])
     if cmd['command'] == "createmessage":
-      return cb(self._process_create_message(cmd['account'], cmd['mailbox'], cmd['uid']))
+      return self._process_create_message(cmd['account'], cmd['mailbox'], cmd['uid'])
     if cmd['command'] == "deletemessage":
-      return cb(self._process_delete_message(cmd['account'], cmd['mailbox'], cmd['uid']))
+      return self._process_delete_message(cmd['account'], cmd['mailbox'], cmd['uid'])
     if cmd['command'] == "setflags":
-      return cb(self._process_set_flags(cmd['account'], cmd['mailbox'], cmd['uid'], cmd['flags']))
+      return self._process_set_flags(cmd['account'], cmd['mailbox'], cmd['uid'], cmd['flags'])
 
     # Do something about erroneous command
     return
@@ -48,7 +48,6 @@ class SimpleStore:
   def _process_list_mailboxes(self, account):
     dirs = os.listdir("%s/%s/" % (self.root, account))
     return {"response":"listmailboxes", "account": account, "mailboxes":dirs}
-    pass
 
   def _process_list_uids(self, account, mailbox):
     uids = os.listdir("%s/%s/%s/" % (self.root, account, mailbox))
@@ -120,36 +119,36 @@ class SimpleStore:
 	   "flags": flags} 
     return ret
 
-def cb(response):
+def cb(response, d):
   print json.dumps(response)
 
 if __name__ == "__main__":
   s = SimpleStore()
 
   testcommand = {"command": "listmailboxes", "account":"via@matthewvia.info"}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
 
   testcommand = {"command": "listuids", "account":"via@matthewvia.info", "mailbox": "INBOX"}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
   
   testcommand = {"command": "getflags", "account":"via@matthewvia.info", "mailbox": "INBOX", "uid": 1}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
   
   testcommand = {"command": "getmessage", "account":"via@matthewvia.info", "mailbox": "INBOX", "uid": 1}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
 
   testcommand = {"command": "createmailbox", "account":"via@matthewvia.info", "mailbox": "testB"}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
 
   testcommand = {"command": "createmessage", "account":"via@matthewvia.info", "mailbox": "testB", "uid": 1}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
 
   testcommand = {"command": "createmessage", "account":"via@matthewvia.info", "mailbox": "testB", "uid": 2}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
 
   testcommand = {"command": "setflags", "account":"via@matthewvia.info", "mailbox": "testB", "uid": 2, "flags": ["\\Deleted", "\\Seen"]}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
   
   testcommand = {"command": "getflags", "account":"via@matthewvia.info", "mailbox": "testB", "uid": 2}
-  s.process(json.dumps(testcommand), cb)
+  s.process(json.dumps(testcommand), cb, None)
 
